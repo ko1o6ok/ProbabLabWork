@@ -113,11 +113,13 @@ Var = Variance(a, D)  # Теоретическая дисперсия для д�
 # Выборочная медиана
 if n % 2 == 0:
     k = n // 2
-    Me = (sorted_data[k] + sorted_data[k + 1]) / 2
+    Me = (sorted_data[k - 1] + sorted_data[k]) / 2
 else:
     k = (n - 1) // 2
-    Me = sorted_data[k + 1]
-
+    Me = sorted_data[k]
+print("------")
+print(sorted_data)
+print("--------")
 tab = PrettyTable(['E_eta', 'x_mean', '|E_eta-x_mean|', 'D_eta', 'S^2', '|D_eta-S^2|', 'M_e', 'R'])
 tab.add_row([Expectation, x_mean, abs(Expectation - x_mean), Var, S2, abs(Var - S2), Me, R])
 print(tab)
@@ -129,25 +131,31 @@ teor_vals = [F(t, a, D) for t in r]
 # Множество значений выборочной функции распределения
 sample_vals = []
 
-current_index = 0
+current_index = 0  # Текущий индекс данных
 
 for eta in r:
-    while sorted_data[current_index] < eta:
-        if current_index != (n - 1):
+    # print(sorted_data[current_index],eta,sorted_data[current_index] < eta)
+    if current_index != n:
+        while sorted_data[current_index] < eta:
             current_index += 1
-        else:
-            break
-    sample_vals.append((current_index + 1) / n)
+            if current_index == n:
+                break
+    sample_vals.append((current_index) / n)
+
+# print("----------")
+# print(sample_vals)
+# print(sorted_data)
+# print("----------")
 
 diff = max([abs(u - v) for u, v in zip(sample_vals, teor_vals)])
 print("Максимальное расхождение теоретической и выборочной функций распределения:")
 print("Diff = ", diff)
 plt.plot(r, teor_vals)
 plt.plot(r, sample_vals, c='r')
-plt.xlabel("Eta",fontsize = 18)
-plt.xticks(fontsize = 18)
-plt.ylabel("F(eta)",fontsize = 18)
-plt.yticks(fontsize = 18)
+plt.xlabel("Eta", fontsize=18)
+plt.xticks(fontsize=18)
+plt.ylabel("F(eta)", fontsize=18)
+plt.yticks(fontsize=18)
 plt.legend(['Теоретич. функция распределения', 'Выборочная функция распределения'])
 plt.show()
 
@@ -155,9 +163,9 @@ print("Границы находятся в диапазоне (0;{}) !".format(
 # k = int(input("Введите число границ промежутков: "))
 # borders = [float(input("Введите {}-ю границу: ".format(i + 1))) for i in range(k)]
 
-k = 50
+k = int(np.cbrt(n))
 
-borders = [right_border * t/(k+1) for t in range(1,k+1)]
+borders = [right_border * t / (k + 1) for t in range(1, k + 1)]
 
 # print(np.array(borders))
 
@@ -177,17 +185,18 @@ fig, ax = plt.subplots()
 for b in borders:
     num = 0  # Число элементов в промежутке
 
-    while b > sorted_data[elem_index] > left_border:
-        elem_index += 1
-        num += 1
-        if elem_index == n-1:
-            break
+    if elem_index != n:
+        while b > sorted_data[elem_index] > left_border:
+            elem_index += 1
+            num += 1
+            if elem_index == n:
+                break
     hist_val = num / (n * (b - left_border))
     histogram.append(hist_val)
     z = (b + left_border) / 2
     Z.append(z)
     density_values.append(g(z, a, D))
-    ax.add_patch(patches.Rectangle((left_border,0),b-left_border,hist_val,color='b'))
+    ax.add_patch(patches.Rectangle((left_border, 0), b - left_border, hist_val, color='b'))
     left_border = b
 
 tbl2 = PrettyTable()
@@ -197,25 +206,24 @@ tbl2 = PrettyTable()
 # density_values.insert(0,"f_eta(z_j)")
 # histogram.insert(0,"hist_j")
 
-tbl2.add_column("z_j",Z)
-tbl2.add_column("f_eta(z_j)",density_values)
-tbl2.add_column("hist_j",histogram)
-
+tbl2.add_column("z_j", Z)
+tbl2.add_column("f_eta(z_j)", density_values)
+tbl2.add_column("hist_j", histogram)
 
 print(tbl2)
-print("Максимальное расхождение плотности = ", max([abs(u-v) for u,v in zip(density_values,histogram)]))
+print("Максимальное расхождение плотности = ", max([abs(u - v) for u, v in zip(density_values, histogram)]))
 
 # Построим гистограмму
-plt.xlabel("eta",fontsize=18)
+plt.xlabel("eta", fontsize=18)
 plt.xticks(fontsize=18)
-plt.xlim([0,right_border])
-plt.ylabel("f_eta",fontsize=18)
+plt.xlim([0, right_border])
+plt.ylabel("f_eta", fontsize=18)
 plt.yticks(fontsize=18)
 
-v_g = [g(t,a,D) for t in r]
-plt.plot(r,v_g,c = 'r',label = "Теоретическая плотность")
-plt.ylim([0,max(v_g)+0.05])
-plt.plot([-1,-2],[-1,-1],'b',label = "Гистограмма")
+v_g = [g(t, a, D) for t in r]
+plt.plot(r, v_g, c='r', label="Теоретическая плотность")
+plt.ylim([0, max(v_g) + 0.05])
+plt.plot([-1, -2], [-1, -1], 'b', label="Гистограмма")
 
 plt.legend(loc='upper right')
 plt.show()
